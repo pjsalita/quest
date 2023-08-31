@@ -38,7 +38,7 @@ class WhereFuzzy
     public static function make(Builder $builder, $field, $value): Builder
     {
         $value       = static::escapeValue($value);
-        $nativeField = '`' . str_replace('.', '`.`', trim($field, '` ')) . '`';
+        $nativeField = static::nativeField($field);
 
         if (! is_array($builder->columns) || empty($builder->columns)) {
             $builder->columns = ['*'];
@@ -60,7 +60,7 @@ class WhereFuzzy
     public static function makeOr(Builder $builder, $field, $value, $relevance): Builder
     {
         $value       = static::escapeValue($value);
-        $nativeField = '`' . str_replace('.', '`.`', trim($field, '` ')) . '`';
+        $nativeField = static::nativeField($field);
 
         if (! is_array($builder->columns) || empty($builder->columns)) {
             $builder->columns = ['*'];
@@ -155,6 +155,17 @@ class WhereFuzzy
         $value = substr(DB::connection()->getPdo()->quote($value), 1, -1);
 
         return $value;
+    }
+
+    /**
+     * Ignore quotations in field search
+     */
+    protected static function nativeField(string $field): string
+    {
+        $nativeField = '`' . str_replace('.', '`.`', trim($field, '` ')) . '`';
+        $nativeField = "REPLACE(REPLACE(REPLACE($nativeField, '`', ''), '\"', ''), '\'', '')";
+
+        return $nativeField;
     }
 
     /**
